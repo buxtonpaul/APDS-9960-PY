@@ -10,25 +10,25 @@
 # * This library interfaces the Avago APDS-9960 to Arduino over I2C. The library
 # * relies on the Arduino Wire (I2C) library. to use the library, instantiate an
 # * APDS9960 object, call init(), and call the appropriate functions.
-# 
-# 
-# APDS-9960 I2C address 
+#
+#
+# APDS-9960 I2C address
 APDS9960_I2C_ADDR = 0x39
 
-# Gesture parameters 
+# Gesture parameters
 GESTURE_THRESHOLD_OUT = 10
 GESTURE_SENSITIVITY_1 = 50
 GESTURE_SENSITIVITY_2 = 20
 
 
-# Acceptable device IDs 
+# Acceptable device IDs
 APDS9960_ID_1 = 0xAB
-APDS9960_ID_2 = 0x9C 
+APDS9960_ID_2 = 0x9C
 
-# Misc parameters 
+# Misc parameters
 FIFO_PAUSE_TIME = 30      # Wait period (ms) between FIFO reads
 
-# APDS-9960 register addresses 
+# APDS-9960 register addresses
 APDS9960_ENABLE = 0x80
 APDS9960_ATIME = 0x81
 APDS9960_WTIME = 0x83
@@ -79,7 +79,7 @@ APDS9960_GFIFO_D = 0xFD
 APDS9960_GFIFO_L = 0xFE
 APDS9960_GFIFO_R = 0xFF
 
-# Bit fields 
+# Bit fields
 APDS9960_PON = 0b00000001
 APDS9960_AEN = 0b00000010
 APDS9960_PEN = 0b00000100
@@ -89,11 +89,11 @@ APDS9960_PIEN = 0b00100000
 APDS9960_GEN = 0b01000000
 APDS9960_GVALID = 0b00000001
 
-# On/Off definitions 
+# On/Off definitions
 OFF = 0
 ON = 1
 
-# Acceptable parameters for setMode 
+# Acceptable parameters for setMode
 POWER = 0
 AMBIENT_LIGHT = 1
 PROXIMITY = 2
@@ -103,37 +103,37 @@ PROXIMITY_INT = 5
 GESTURE = 6
 ALL = 7
 
-# LED Drive values 
+# LED Drive values
 LED_DRIVE_100MA = 0
 LED_DRIVE_50MA = 1
 LED_DRIVE_25MA = 2
 LED_DRIVE_12_5MA = 3
 
-# Proximity Gain (PGAIN) values 
-PGAIN_1X =  0
-PGAIN_2X =  1
-PGAIN_4X =  2
-PGAIN_8X =  3
+# Proximity Gain (PGAIN) values
+PGAIN_1X = 0
+PGAIN_2X = 1
+PGAIN_4X = 2
+PGAIN_8X = 3
 
-# ALS Gain (AGAIN) values 
+# ALS Gain (AGAIN) values
 AGAIN_1X = 0
 AGAIN_4X = 1
 AGAIN_16X = 2
 AGAIN_64X = 3
 
-# Gesture Gain (GGAIN) values 
+# Gesture Gain (GGAIN) values
 GGAIN_1X = 0
 GGAIN_2X = 1
 GGAIN_4X = 2
 GGAIN_8X = 3
 
-# LED Boost values 
-LED_BOOST_100 =  0
-LED_BOOST_150 =  1
-LED_BOOST_200 =  2
-LED_BOOST_300 =  3    
+# LED Boost values
+LED_BOOST_100 = 0
+LED_BOOST_150 = 1
+LED_BOOST_200 = 2
+LED_BOOST_300 = 3
 
-# Gesture wait time values 
+# Gesture wait time values
 GWTIME_0MS = 0
 GWTIME_2_8MS = 1
 GWTIME_5_6MS = 2
@@ -143,13 +143,13 @@ GWTIME_22_4MS = 5
 GWTIME_30_8MS = 6
 GWTIME_39_2MS = 7
 
-# Default values 
+# Default values
 DEFAULT_ATIME = 219     # 103ms
 DEFAULT_WTIME = 246     # 27ms
 DEFAULT_PROX_PPULSE = 0x87    # 16us, 8 pulses
 DEFAULT_GESTURE_PPULSE = 0x89    # 16us, 10 pulses
 DEFAULT_POFFSET_UR = 0       # 0 offset
-DEFAULT_POFFSET_DL = 0       # 0 offset      
+DEFAULT_POFFSET_DL = 0       # 0 offset
 DEFAULT_CONFIG1 = 0x60    # No 12x wait (WTIME) factor
 DEFAULT_LDRIVE = LED_DRIVE_100MA
 DEFAULT_PGAIN = PGAIN_4X
@@ -159,10 +159,10 @@ DEFAULT_PIHT = 50      # High proximity threshold
 DEFAULT_AILT = 0xFFFF  # Force interrupt for calibration
 DEFAULT_AIHT = 0
 DEFAULT_PERS = 0x11    # 2 consecutive prox or ALS for int.
-DEFAULT_CONFIG2 = 0x01    # No saturation interrupts or LED boost  
+DEFAULT_CONFIG2 = 0x01    # No saturation interrupts or LED boost
 DEFAULT_CONFIG3 = 0       # Enable all photodiodes, no SAI
 DEFAULT_GPENTH = 40      # Threshold for entering gesture mode
-DEFAULT_GEXTH = 30      # Threshold for exiting gesture mode    
+DEFAULT_GEXTH = 30      # Threshold for exiting gesture mode
 DEFAULT_GCONF1 = 0x40    # 4 gesture events for int., 1 for exit
 DEFAULT_GGAIN = GGAIN_4X
 DEFAULT_GLDRIVE = LED_DRIVE_100MA
@@ -173,37 +173,18 @@ DEFAULT_GCONF3 = 0       # All photodiodes active during gesture
 DEFAULT_GIEN = 0       # Disable gesture interrupts
 
 
-#  DIR_NONE,
-#  DIR_LEFT,
-#  DIR_RIGHT,
-#  DIR_UP,
-#  DIR_DOWN,
-#  DIR_NEAR,
-#  DIR_FAR,
-#  DIR_ALL
+# Direction definitions
+class Directions:
+    DIR_NONE, DIR_LEFT, DIR_RIGHT, DIR_UP, DIR_DOWN, DIR_NEAR, DIR_FAR, DIR_ALL = range(8)
 
 
-# Direction definitions 
-#enum {
-#  DIR_NONE,
-#  DIR_LEFT,
-#  DIR_RIGHT,
-#  DIR_UP,
-#  DIR_DOWN,
-#  DIR_NEAR,
-#  DIR_FAR,
-#  DIR_ALL
-#};
 
-# State definitions 
-#enum {
-#  NA_STATE,
-#  NEAR_STATE,
-#  FAR_STATE,
-#  ALL_STATE
-#};
+# State definitions
+class States:
+    NA_STATE, NEAR_STATE, FAR_STATE, ALL_STATEGWTIME_0MS = range(4)
 
-# Container for gesture data 
+
+# Container for gesture data
 #typedef struct gesture_data_type {
 #    uint8_t u_data[32];
 #    uint8_t d_data[32];
@@ -215,125 +196,121 @@ DEFAULT_GIEN = 0       # Disable gesture interrupts
 #    uint8_t out_threshold;
 #} gesture_data_type;
 
-# APDS9960 Class 
+# APDS9960 Class
 #class SparkFun_APDS9960 {
 #public:
 
- #    Initialization methods 
+ #    Initialization methods
  #   SparkFun_APDS9960();
  #   ~SparkFun_APDS9960();
  #   bool init();
  #   uint8_t getMode();
  #   bool setMode(uint8_t mode, uint8_t enable);
- #   
- #    Turn the APDS-9960 on and off 
+ #
+ #    Turn the APDS-9960 on and off
  #   bool enablePower();
  #   bool disablePower();
- #   
- #    Enable or disable specific sensors 
+
+ #    Enable or disable specific sensors
  #   bool enableLightSensor(bool interrupts = false);
  #   bool disableLightSensor();
  #   bool enableProximitySensor(bool interrupts = false);
  #   bool disableProximitySensor();
  #   bool enableGestureSensor(bool interrupts = true);
  #  bool disableGestureSensor();
- #   
- #    LED drive strength control 
+
+ #    LED drive strength control
  #   uint8_t getLEDDrive();
  #   bool setLEDDrive(uint8_t drive);
  #   uint8_t getGestureLEDDrive();
  #   bool setGestureLEDDrive(uint8_t drive);
- #   
- #    Gain control 
+
+ #    Gain control
  #   uint8_t getAmbientLightGain();
  #   bool setAmbientLightGain(uint8_t gain);
  #   uint8_t getProximityGain();
  #   bool setProximityGain(uint8_t gain);
  #   uint8_t getGestureGain();
  #   bool setGestureGain(uint8_t gain);
-    
- #    Get and set light interrupt thresholds 
+ #   Get and set light interrupt thresholds
  #   bool getLightIntLowThreshold(uint16_t &threshold);
  #   bool setLightIntLowThreshold(uint16_t threshold);
  #   bool getLightIntHighThreshold(uint16_t &threshold);
  #   bool setLightIntHighThreshold(uint16_t threshold);
- #   
- #    Get and set proximity interrupt thresholds 
+
+ #    Get and set proximity interrupt thresholds
  #   bool getProximityIntLowThreshold(uint8_t &threshold);
  #   bool setProximityIntLowThreshold(uint8_t threshold);
  #   bool getProximityIntHighThreshold(uint8_t &threshold);
  #   bool setProximityIntHighThreshold(uint8_t threshold);
-    
- #    Get and set interrupt enables 
+
+ #    Get and set interrupt enables
  #   uint8_t getAmbientLightIntEnable();
  #   bool setAmbientLightIntEnable(uint8_t enable);
  #   uint8_t getProximityIntEnable();
  #   bool setProximityIntEnable(uint8_t enable);
  #   uint8_t getGestureIntEnable();
  #   bool setGestureIntEnable(uint8_t enable);
- #   
- #    Clear interrupts 
+ #   Clear interrupts
  #   bool clearAmbientLightInt();
  #   bool clearProximityInt();
-    
- #    Ambient light methods 
+
+ #    Ambient light methods
  #   bool readAmbientLight(uint16_t &val);
  #   bool readRedLight(uint16_t &val);
  #   bool readGreenLight(uint16_t &val);
  #   bool readBlueLight(uint16_t &val);
-    
- #    Proximity methods 
+
+ #    Proximity methods
  #   bool readProximity(uint8_t &val);
-    
- #    Gesture methods 
+ #    Gesture methods
  #   bool isGestureAvailable();
  #   int readGesture();
-    
 #private:
 
-#     Gesture processing 
+#     Gesture processing
 #    void resetGestureParameters();
 #    bool processGestureData();
 #    bool decodeGesture();
 
-#     Proximity Interrupt Threshold 
+#     Proximity Interrupt Threshold
 #    uint8_t getProxIntLowThresh();
 #    bool setProxIntLowThresh(uint8_t threshold);
 #    uint8_t getProxIntHighThresh();
 #    bool setProxIntHighThresh(uint8_t threshold);
-    
-#     LED Boost Control 
+
+#     LED Boost Control
 #    uint8_t getLEDBoost();
 #    bool setLEDBoost(uint8_t boost);
-    
-#     Proximity photodiode select 
+
+#     Proximity photodiode select
 #    uint8_t getProxGainCompEnable();
 #    bool setProxGainCompEnable(uint8_t enable);
 #    uint8_t getProxPhotoMask();
 #    bool setProxPhotoMask(uint8_t mask);
-#    
-#     Gesture threshold control 
+
+#     Gesture threshold control
 #    uint8_t getGestureEnterThresh();
 #    bool setGestureEnterThresh(uint8_t threshold);
 #    uint8_t getGestureExitThresh();
 #    bool setGestureExitThresh(uint8_t threshold);
-#    
-#     Gesture LED, gain, and time control 
+
+#     Gesture LED, gain, and time control
 #    uint8_t getGestureWaitTime();
 #    bool setGestureWaitTime(uint8_t time);
-#    
-#     Gesture mode 
+
+#     Gesture mode
 #    uint8_t getGestureMode();
 #    bool setGestureMode(uint8_t mode);
 
-#     Raw I2C Commands 
+#     Raw I2C Commands
 #    bool wireWriteByte(uint8_t val);
 #    bool wireWriteDataByte(uint8_t reg, uint8_t val);
 #    bool wireWriteDataBlock(uint8_t reg, uint8_t *val, unsigned int len);
 #    bool wireReadDataByte(uint8_t reg, uint8_t &val);
 #    int wireReadDataBlock(uint8_t reg, uint8_t *val, unsigned int len);
 
-#     Members 
+#     Members
 #    gesture_data_type gesture_data_;
 #    int gesture_ud_delta_;
 #    int gesture_lr_delta_;

@@ -29,7 +29,8 @@ from apds9960_constants import *
 
 def info():
     print APDS9960_I2C_ADDR
-
+    print Directions.DIR_NEAR
+    print Directions.DIR_ALL
 info()
 
 
