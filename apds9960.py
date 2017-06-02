@@ -34,32 +34,44 @@ def info():
 info()
 
 
+class APDS9960:
+    def __init__(bus = 123, devaddr=APDS9960_I2C_ADDR):
+        # init the bus and store the devardd
+        _devaddr = devaddr
+        _bus=bus
 
-#/**
-# * @brief Constructor - Instantiates SparkFun_APDS9960 object
-# */
-#SparkFun_APDS9960::SparkFun_APDS9960()
-#{
-#    gesture_ud_delta_ = 0;
-#    gesture_lr_delta_ = 0;
-#    
-#    gesture_ud_count_ = 0;
-#    gesture_lr_count_ = 0;
-#    
-#    gesture_near_count_ = 0;
-#    gesture_far_count_ = 0;
-#    
-#    gesture_state_ = 0;
-#    gesture_motion_ = DIR_NONE;
-#}
-# 
-#/**
-# * @brief Destructor
-# */
-#SparkFun_APDS9960::~SparkFun_APDS9960()
-#{
-#
-#}
+        _gesture_ud_delta_ = 0
+        _gesture_lr_delta_ = 0
+        _gesture_ud_count_ = 0
+        _gesture_lr_count_ = 0
+        _gesture_near_count_ = 0
+        _gesture_far_count_ = 0
+        _gesture_state_ = States.NA_STATE
+        _gesture_motion_ = Directions.DIR_NONE
+        _device = 0
+        _devid = 0
+
+    def initDevice():
+        if self._bus == 123:
+            print "Pretending to do something here"
+            return OK
+
+        from smbus import SMBus
+        self._device = SMBus(bus) # 0 indicates /dev/i2c-0
+        self._devid = self._device.read_byte_data(self._devAddr, APDS9960_ID)
+        if  self._devid not in (APDS9960_ID_1, APDS9960_ID_2):
+            print "Unknown device ID"
+            raise
+        if setMode(ALL, OFF) != OK:
+            return ERROR
+        self._device.write_byte_data(self._devAddr,APDS9960_ATIME, DEFAULT_ATIME)
+        self._device.write_byte_data(APDS9960_WTIME, DEFAULT_WTIME)
+        self._device.write_byte_data(APDS9960_PPULSE, DEFAULT_PROX_PPULSE)
+        self._device.write_byte_data(APDS9960_POFFSET_UR, DEFAULT_POFFSET_UR)
+        self._device.write_byte_data(APDS9960_POFFSET_DL, DEFAULT_POFFSET_DL)
+        self._device.write_byte_data(APDS9960_CONFIG1, DEFAULT_CONFIG1)
+        
+
 #
 #/**
 # * @brief Configures I2C communications and initializes registers to defaults
@@ -68,43 +80,7 @@ info()
 # */
 #bool SparkFun_APDS9960::init()
 #{
-#    uint8_t id;
-#
-#    /* Initialize I2C */
-#    Wire.begin();
-#     
-#    /* Read ID register and check against known values for APDS-9960 */
-#    if( !wireReadDataByte(APDS9960_ID, id) ) {
-#        return false;
-#    }
-#    if( !(id == APDS9960_ID_1 || id == APDS9960_ID_2) ) {
-#        return false;
-#    }
-#     
-#    /* Set ENABLE register to 0 (disable all features) */
-#    if( !setMode(ALL, OFF) ) {
-#        return false;
-#    }
-#    
-#    /* Set default values for ambient light and proximity registers */
-#    if( !wireWriteDataByte(APDS9960_ATIME, DEFAULT_ATIME) ) {
-#        return false;
-#    }
-#    if( !wireWriteDataByte(APDS9960_WTIME, DEFAULT_WTIME) ) {
-#        return false;
-#    }
-#    if( !wireWriteDataByte(APDS9960_PPULSE, DEFAULT_PROX_PPULSE) ) {
-#        return false;
-#    }
-#    if( !wireWriteDataByte(APDS9960_POFFSET_UR, DEFAULT_POFFSET_UR) ) {
-#        return false;
-#    }
-#    if( !wireWriteDataByte(APDS9960_POFFSET_DL, DEFAULT_POFFSET_DL) ) {
-#        return false;
-#    }
-#    if( !wireWriteDataByte(APDS9960_CONFIG1, DEFAULT_CONFIG1) ) {
-#        return false;
-#    }
+
 #    if( !setLEDDrive(DEFAULT_LDRIVE) ) {
 #        return false;
 #    }
