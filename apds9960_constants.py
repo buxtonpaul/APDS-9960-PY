@@ -93,6 +93,10 @@ APDS9960_GVALID = 0b00000001
 OFF = 0
 ON = 1
 
+OK = 0
+ERROR =1 
+
+
 # Acceptable parameters for setMode
 POWER = 0
 AMBIENT_LIGHT = 1
