@@ -23,6 +23,7 @@
 # 
 
 from apds9960_constants import *
+import time
 
 
 
@@ -31,420 +32,520 @@ def info():
     print APDS9960_I2C_ADDR
     print Directions.DIR_NEAR
     print Directions.DIR_ALL
-info()
 
 
 class APDS9960:
-    def __init__(bus = 123, devaddr=APDS9960_I2C_ADDR):
+    def __init__(self, bus=123, devaddr=APDS9960_I2C_ADDR):
         # init the bus and store the devardd
-        _devaddr = devaddr
-        _bus=bus
+        self._devaddr = devaddr
+        self._bus = bus
 
-        _gesture_ud_delta_ = 0
-        _gesture_lr_delta_ = 0
-        _gesture_ud_count_ = 0
-        _gesture_lr_count_ = 0
-        _gesture_near_count_ = 0
-        _gesture_far_count_ = 0
-        _gesture_state_ = States.NA_STATE
-        _gesture_motion_ = Directions.DIR_NONE
-        _device = 0
-        _devid = 0
+        self._gesture_ud_delta_ = 0
+        self._gesture_lr_delta_ = 0
+        self._gesture_ud_count_ = 0
+        self._gesture_lr_count_ = 0
+        self._gesture_near_count_ = 0
+        self._gesture_far_count_ = 0
+        self._gesture_state_ = States.NA_STATE
+        self._gesture_motion_ = Directions.DIR_NONE
+        self._device = 0
+        self._devid = 0
 
-    def initDevice():
+    def initDevice(self):
         if self._bus == 123:
             print "Pretending to do something here"
             return OK
 
         from smbus import SMBus
-        self._device = SMBus(bus) # 0 indicates /dev/i2c-0
-        self._devid = self._device.read_byte_data(self._devAddr, APDS9960_ID)
+        self._device = SMBus(self._bus) # 0 indicates /dev/i2c-0
+        self._devid = self._device.read_byte_data(self._devaddr, APDS9960_ID)
         if  self._devid not in (APDS9960_ID_1, APDS9960_ID_2):
-            print "Unknown device ID"
+            print "Unknown device ID {}".format(self._devid)
             raise
-        if setMode(ALL, OFF) != OK:
+        print "Device found ok"
+        if self.setMode(ALL, OFF) != OK:
+            print "Failed to set all oiff"
             return ERROR
-        self._device.write_byte_data(self._devAddr,APDS9960_ATIME, DEFAULT_ATIME)
-        self._device.write_byte_data(APDS9960_WTIME, DEFAULT_WTIME)
-        self._device.write_byte_data(APDS9960_PPULSE, DEFAULT_PROX_PPULSE)
-        self._device.write_byte_data(APDS9960_POFFSET_UR, DEFAULT_POFFSET_UR)
-        self._device.write_byte_data(APDS9960_POFFSET_DL, DEFAULT_POFFSET_DL)
-        self._device.write_byte_data(APDS9960_CONFIG1, DEFAULT_CONFIG1)
-        
 
-#
-#/**
-# * @brief Configures I2C communications and initializes registers to defaults
-# *
-# * @return True if initialized successfully. False otherwise.
-# */
-#bool SparkFun_APDS9960::init()
-#{
+        self._device.write_byte_data(self._devaddr, APDS9960_ATIME, DEFAULT_ATIME)
+        self._device.write_byte_data(self._devaddr, APDS9960_WTIME, DEFAULT_WTIME)
+        self._device.write_byte_data(self._devaddr, APDS9960_PPULSE, DEFAULT_PROX_PPULSE)
+        self._device.write_byte_data(self._devaddr, APDS9960_POFFSET_UR, DEFAULT_POFFSET_UR)
+        self._device.write_byte_data(self._devaddr, APDS9960_POFFSET_DL, DEFAULT_POFFSET_DL)
+        self._device.write_byte_data(self._devaddr, APDS9960_CONFIG1, DEFAULT_CONFIG1)
 
-#    if( !setLEDDrive(DEFAULT_LDRIVE) ) {
-#        return false;
-#    }
-#    if( !setProximityGain(DEFAULT_PGAIN) ) {
-#        return false;
-#    }
-#    if( !setAmbientLightGain(DEFAULT_AGAIN) ) {
-#        return false;
-#    }
-#    if( !setProxIntLowThresh(DEFAULT_PILT) ) {
-#        return false;
-#    }
-#    if( !setProxIntHighThresh(DEFAULT_PIHT) ) {
-#        return false;
-#    }
-#    if( !setLightIntLowThreshold(DEFAULT_AILT) ) {
-#        return false;
-#    }
-#    if( !setLightIntHighThreshold(DEFAULT_AIHT) ) {
-#        return false;
-#    }
-#    if( !wireWriteDataByte(APDS9960_PERS, DEFAULT_PERS) ) {
-#        return false;
-#    }
-#    if( !wireWriteDataByte(APDS9960_CONFIG2, DEFAULT_CONFIG2) ) {
-#        return false;
-#    }
-#    if( !wireWriteDataByte(APDS9960_CONFIG3, DEFAULT_CONFIG3) ) {
-#        return false;
-#    }
-#    
-#    /* Set default values for gesture sense registers */
-#    if( !setGestureEnterThresh(DEFAULT_GPENTH) ) {
-#        return false;
-#    }
-#    if( !setGestureExitThresh(DEFAULT_GEXTH) ) {
-#        return false;
-#    }
-#    if( !wireWriteDataByte(APDS9960_GCONF1, DEFAULT_GCONF1) ) {
-#        return false;
-#    }
-#    if( !setGestureGain(DEFAULT_GGAIN) ) {
-#        return false;
-#    }
-#    if( !setGestureLEDDrive(DEFAULT_GLDRIVE) ) {
-#        return false;
-#    }
-#    if( !setGestureWaitTime(DEFAULT_GWTIME) ) {
-#        return false;
-#    }
-#    if( !wireWriteDataByte(APDS9960_GOFFSET_U, DEFAULT_GOFFSET) ) {
-#        return false;
-#    }
-#    if( !wireWriteDataByte(APDS9960_GOFFSET_D, DEFAULT_GOFFSET) ) {
-#        return false;
-#    }
-#    if( !wireWriteDataByte(APDS9960_GOFFSET_L, DEFAULT_GOFFSET) ) {
-#        return false;
-#    }
-#    if( !wireWriteDataByte(APDS9960_GOFFSET_R, DEFAULT_GOFFSET) ) {
-#        return false;
-#    }
-#    if( !wireWriteDataByte(APDS9960_GPULSE, DEFAULT_GPULSE) ) {
-#        return false;
-#    }
-#    if( !wireWriteDataByte(APDS9960_GCONF3, DEFAULT_GCONF3) ) {
-#        return false;
-#    }
-#    if( !setGestureIntEnable(DEFAULT_GIEN) ) {
-#        return false;
-#    }
-#    
-##if 0
-#    /* Gesture config register dump */
-#    uint8_t reg;
-#    uint8_t val;
-#  
-#    for(reg = 0x80; reg <= 0xAF; reg++) {
-#        if( (reg != 0x82) && \
-#            (reg != 0x8A) && \
-#            (reg != 0x91) && \
-#            (reg != 0xA8) && \
-#            (reg != 0xAC) && \
-#            (reg != 0xAD) )
-#        {
-#            wireReadDataByte(reg, val);
-#            Serial.print(reg, HEX);
-#            Serial.print(": 0x");
-#            Serial.println(val, HEX);
-#        }
-#    }
-#
-#    for(reg = 0xE4; reg <= 0xE7; reg++) {
-#        wireReadDataByte(reg, val);
-#        Serial.print(reg, HEX);
-#        Serial.print(": 0x");
-#        Serial.println(val, HEX);
-#    }
-##endif
-#
-#    return true;
-#}
-#
+        self.setLEDDrive(DEFAULT_LDRIVE)
+        self.setProximityGain(DEFAULT_PGAIN)
+        self.setAmbientLightGain(DEFAULT_AGAIN)
+        self.setProxIntLowThresh(DEFAULT_PILT)
+        self.setProxIntHighThresh(DEFAULT_PIHT)
+        self.setLightIntLowThreshold(DEFAULT_AILT)
+        self.setLightIntHighThreshold(DEFAULT_AIHT)
+        self._device.write_byte_data(self._devaddr, APDS9960_PERS, DEFAULT_PERS)
+        self._device.write_byte_data(self._devaddr, APDS9960_CONFIG2, DEFAULT_CONFIG2)
+        self._device.write_byte_data(self._devaddr, APDS9960_CONFIG3, DEFAULT_CONFIG3)
+        # Set default values for gesture sense registers
+        self.setGestureEnterThresh(DEFAULT_GPENTH)
+        self.setGestureExitThresh(DEFAULT_GEXTH)
+        self._device.write_byte_data(self._devaddr, APDS9960_GCONF1, DEFAULT_GCONF1)
+        self.setGestureGain(DEFAULT_GGAIN)
+        self.setGestureLEDDrive(DEFAULT_GLDRIVE)
+        self.setGestureWaitTime(DEFAULT_GWTIME)
+
+        self._device.write_byte_data(self._devaddr, APDS9960_GOFFSET_U, DEFAULT_GOFFSET)
+        self._device.write_byte_data(self._devaddr, APDS9960_GOFFSET_D, DEFAULT_GOFFSET)
+        self._device.write_byte_data(self._devaddr, APDS9960_GOFFSET_L, DEFAULT_GOFFSET)
+        self._device.write_byte_data(self._devaddr, APDS9960_GOFFSET_R, DEFAULT_GOFFSET)
+        self._device.write_byte_data(self._devaddr, APDS9960_GPULSE, DEFAULT_GPULSE)
+        self._device.write_byte_data(self._devaddr, APDS9960_GCONF3, DEFAULT_GCONF3)
+        self.setGestureIntEnable(DEFAULT_GIEN)
+        return OK
+
+    def setMode(self, mode, enable):
+    # sets/clears bits in the mode register for the mode requested.
+        val = self.getMode()
+        if val == 0xff:
+            print "unable to set mode bits as mode reg = 0xff"
+            return
+        enable = enable & 1
+        if mode >= 0 and mode <= 6:
+            if enable:
+                val |= 1<<mode
+            else:
+                val &= ~(1<<mode)
+        elif mode == ALL:
+            if enable:
+                val = 0x7f
+            else:
+                val = 0
+        self._device.write_byte_data(self._devaddr, APDS9960_ENABLE, val)
+        return OK
+
+    def getMode(self):
+        val = self._device.read_byte_data(self._devaddr, APDS9960_ENABLE)
+        return val
+
+    def enableLightSensor(self, interrupts):
+        self.setAmbientLightGain(DEFAULT_AGAIN)
+        if interrupts:
+            self.setAmbientLightIntEnable(1)
+        else:
+            self.setAmbientLightIntEnable(0)
+        self.enablePower()
+        self.setMode(AMBIENT_LIGHT, 1)
+
+
+    def disableLightSensor(self):
+        self.setAmbientLightIntEnable(0)
+        self.setMode(AMBIENT_LIGHT, 0)
+
+    def enableProximitySensor(self, interrupts):
+        self.setProximityGain(DEFAULT_PGAIN)
+        self.setLEDDrive(DEFAULT_LDRIVE)
+        if interrupts:
+            self.setProximityIntEnable(1)
+        else:
+            self.setProximityIntEnable(0)
+        self.enablePower()
+        self.setMode(PROXIMITY, 1)
+
+    def disableProximitySensor(self):
+        self.setProximityIntEnable(0)
+        self.setMode(PROXIMITY, 0)
+
+    def enableGestureSensor(self, interrupts):
+        self.resetGestureParameters()
+        self._device.write_byte_data(self._devaddr, APDS9960_WTIME, 0xFF)
+        self._device.write_byte_data(self._devaddr, APDS9960_PPULSE, DEFAULT_GESTURE_PPULSE)
+        self.setLEDBoost(LED_BOOST_300)
+        if interrupts:
+            self.setGestureIntEnable(1)
+        else:
+            self.setGestureIntEnable(0)
+        self.setGestureMode(1)
+        self.enablePower()
+        self.setMode(WAIT, 1)
+        self.setMode(PROXIMITY, 1)
+        self.setMode(GESTURE, 1)
+
+    def resetGestureParameters(self, interrupts):
+        self.setGestureIntEnable(0)
+        self.setGestureMode(0)
+        self.setMode(GESTURE, 0)
+
+    def isGestureAvailable(self):
+        val = self._device.read_byte_data(self._devaddr, APDS9960_GSTATUS)
+        val &= APDS9960_GVALID
+        if val == 1:
+            return True
+        else:
+            return False
+
+    def readGesture(self):
+
+        if  (self.isGestureAvailable() == False) or ((self.getMode() & 0b01000001) == 0):
+            return Directions.DIR_NONE
+        while True:
+            time.sleep(FIFO_PAUSE_TIME/1000.0) # assuming the define is in ms
+            gstatus = self._device.read_byte_data(self._devaddr, APDS9960_GSTATUS)
+            if (gstatus & APDS9960_GVALID) == APDS9960_GVALID:
+                fifo_level = self._device.read_byte_data(self._devaddr, APDS9960_GFLVL)
+                print "fifo_level = {}".format(fifo_level)
+                if fifo_level > 0:
+                    fifo_data = self._device.read_i2c_block_data(self._devaddr, 
+                                                                APDS9960_GFIFO_U, fifo_level*4)
+                    print fifo_data
+                else:
+                    return Directions.DIR_NONE
+            else:
+                return Directions.DIR_NONE
+            
+
+    def enablePower(self):
+        self.setMode(POWER,1)
+    
+    def disablePower(self):
+        self.setmode(POWER,0)
+
+
+
 #/*******************************************************************************
-# * Public methods for controlling the APDS-9960
+# * Ambient light and color sensor controls
 # ******************************************************************************/
 #
-#/**
-# * @brief Reads and returns the contents of the ENABLE register
-# *
-# * @return Contents of the ENABLE register. 0xFF if error.
-# */
-#uint8_t SparkFun_APDS9960::getMode()
-#{
-#    uint8_t enable_value;
-#    
-#    /* Read current ENABLE register */
-#    if( !wireReadDataByte(APDS9960_ENABLE, enable_value) ) {
-#        return ERROR;
-#    }
-#    
-#    return enable_value;
-#}
+
+    def readAmbientLight(self):
+        vallow = self._device.read_byte_data(self._devaddr, APDS9960_CDATAL)
+        valhi = self._device.read_byte_data(self._devaddr, APDS9960_CDATAH)
+        return vallow + valhi<<8
+
+    def readRedLight(self):
+        vallow = self._device.read_byte_data(self._devaddr, APDS9960_RDATAL)
+        valhi = self._device.read_byte_data(self._devaddr, APDS9960_RDATAH)
+        return vallow + valhi<<8
+
+    def readGreenLight(self):
+        vallow = self._device.read_byte_data(self._devaddr, APDS9960_GDATAL)
+        valhi = self._device.read_byte_data(self._devaddr, APDS9960_GDATAH)
+        return vallow + valhi<<8
+
+    def readBlueLight(self):
+        vallow = self._device.read_byte_data(self._devaddr, APDS9960_BDATAL)
+        valhi = self._device.read_byte_data(self._devaddr, APDS9960_BDATAH)
+        return vallow + valhi<<8
+
+
+
+    def readProximity(self):
+        prox=self._device.read_byte_data(self._devaddr, APDS9960_PDATA)
+        return prox
+
+
+    # get/set fields within a register
+    def getVal(self,reg,mask,shift):
+        val = self._device.read_byte_data(self._devaddr, reg)
+        return (val>>shift)&mask
+
+    def setVal(self,reg,mask,shift,setvalue):
+        val = self._device.read_byte_data(self._devaddr, reg)
+        setvalue &= mask
+        val &= ~(mask<<shift)
+        val |= (setvalue<<shift)
+        self._device.write_byte_data(self._devaddr, reg, val)
+
+
+#
+#/*******************************************************************************
+# * Getters and setters for register values
+
+    def getProxIntLowThresh(self):
+        return self._device.read_byte_data(self._devaddr, APDS9960_PILT)
+
+    def setProxIntLowThresh(self,val):
+        self._device.write_byte_data(self._devaddr, APDS9960_PILT, val)
+
+    def getProxIntHighThresh(self):
+        return self._device.read_byte_data(self._devaddr, APDS9960_PIHT)
+
+    def setProxIntHighThresh(self,val):
+        self._device.write_byte_data(self._devaddr, APDS9960_PIHT, val)
+
+
+
+    def getLEDDrive(self):
+        # * @brief Returns LED drive strength for proximity and ALS
+        # * Value    LED Current
+        # *   0        100 mA
+        # *   1         50 mA
+        # *   2         25 mA
+        # *   3         12.5 mA
+        # *
+        val = self.getVal(APDS9960_CONTROL,0x3,6)
+        return val 
+
+
+    def setLEDDrive(self,drive):
+        self.setVal(APDS9960_CONTROL,0x3,6,drive)
+ 
+
+    def getProximityGain(self):
+        # * @brief Returns LED drive strength for proximity and ALS
+        # * Value    Gain
+        # *   0       1x
+        # *   1       2x
+        # *   2       4x
+        # *   3       8x
+        # *
+        val = self.getVal(APDS9960_CONTROL,0x3,2)
+        return val 
+
+    def setProximityGain(self,gain):
+        self.setVal(APDS9960_CONTROL,0x3,2,gain)
+
+
+    def getAmbientLightGain(self):
+        # * @brief Returns LED drive strength for proximity and ALS
+        # * Value    Gain
+        # *   0       1x
+        # *   1       4x
+        # *   2       16x
+        # *   3       64x
+        # *
+        val = self.getVal(APDS9960_CONTROL,0x3,0)
+        return val 
+
+    def setAmbientLightGain(self,gain):
+        self.setVal(APDS9960_CONTROL,0x3,0,gain)
+
+    def getLEDBoost(self):
+        # * Value  Boost Current
+        # *   0        100%
+        # *   1        150%
+        # *   2        200%
+        # *   3        300%
+        # *
+        return self.getVal(APDS9960_CONFIG2,0x3,4) 
+
+    def setLEDBoost(self,drive):
+        self.setVal(APDS9960_CONFIG2,0x3,4,drive)
+
+    def getProxGainCompEnable(self):
+        return self.getVal(APDS9960_CONFIG3,0x1,5)
+
+    def setProxGainCompEnable(self,val):
+        self.setVal(APDS9960_CONFIG3,0x1,5,val)
+
+
+
+    def getProxPhotoMask(self):
+        # * 1 = disabled, 0 = enabled
+        # * Bit    Photodiode
+        # *  3       UP
+        # *  2       DOWN
+        # *  1       LEFT
+        # *  0       RIGHT
+        return self.getVal(APDS9960_CONFIG3,0xf,0)
+
+    def setProxPhotoMask(self,val):
+        self.setVal(APDS9960_CONFIG3,0xf,0,val)
+
+    def getGestureEnterThresh(self):
+        return self._device.read_byte_data(self._devaddr, APDS9960_GPENTH)
+
+    def setGestureEnterThresh(self,val):
+        self._device.write_byte_data(self._devaddr, APDS9960_GPENTH, val)
+
+
+    def getGestureExitThresh(self):
+        return self._device.read_byte_data(self._devaddr, APDS9960_GEXTH)
+
+    def setGestureExitThresh(self,val):
+        self._device.write_byte_data(self._devaddr, APDS9960_GEXTH, val)
+
+
+    def getGestureGain(self):
+        # * @brief Gets the gain of the photodiode during gesture mode
+        # *
+        # * Value    Gain
+        # *   0       1x
+        # *   1       2x
+        # *   2       4x
+        # *   3       8x
+        # *
+        return self.getVal(APDS9960_GCONF2,0x3,5)
+
+    def setGestureGain(self,val):
+        self.setVal(APDS9960_GCONF2,0x3,5,val)
+
+
+
+
 #
 #/**
-# * @brief Enables or disables a feature in the APDS-9960
+# * @brief Gets the drive current of the LED during gesture mode
 # *
-# * @param[in] mode which feature to enable
-# * @param[in] enable ON (1) or OFF (0)
-# * @return True if operation success. False otherwise.
+# * Value    LED Current
+# *   0        100 mA
+# *   1         50 mA
+# *   2         25 mA
+# *   3         12.5 mA
+# *
+# * @return the LED drive current value. 0xFF on error.
 # */
-#bool SparkFun_APDS9960::setMode(uint8_t mode, uint8_t enable)
-#{
-#    uint8_t reg_val;
-#
-#    /* Read current ENABLE register */
-#    reg_val = getMode();
-#    if( reg_val == ERROR ) {
-#        return false;
-#    }
-#    
-#    /* Change bit(s) in ENABLE register */
-#    enable = enable & 0x01;
-#    if( mode >= 0 && mode <= 6 ) {
-#        if (enable) {
-#            reg_val |= (1 << mode);
-#        } else {
-#            reg_val &= ~(1 << mode);
-#        }
-#    } else if( mode == ALL ) {
-#        if (enable) {
-#            reg_val = 0x7F;
-#        } else {
-#            reg_val = 0x00;
-#        }
-#    }
-#        
-#    /* Write value back to ENABLE register */
-#    if( !wireWriteDataByte(APDS9960_ENABLE, reg_val) ) {
-#        return false;
-#    }
-#        
-#    return true;
-#}
+    def getGestureLEDDrive(self):
+         return self.getVal(APDS9960_GCONF2,0x3,3)
+    def setGestureLEDDrive(self, val):
+        self.setVal(APDS9960_GCONF2,0x3,3,val)
+
 #
 #/**
-# * @brief Starts the light (R/G/B/Ambient) sensor on the APDS-9960
+# * @brief Gets the time in low power mode between gesture detections
 # *
-# * @param[in] interrupts true to enable hardware interrupt on high or low light
-# * @return True if sensor enabled correctly. False on error.
+# * Value    Wait time
+# *   0          0 ms
+# *   1          2.8 ms
+# *   2          5.6 ms
+# *   3          8.4 ms
+# *   4         14.0 ms
+# *   5         22.4 ms
+# *   6         30.8 ms
+# *   7         39.2 ms
+# *
+# * @return the current wait time between gestures. 0xFF on error.
 # */
-#bool SparkFun_APDS9960::enableLightSensor(bool interrupts)
-#{
-#    
-#    /* Set default gain, interrupts, enable power, and enable sensor */
-#    if( !setAmbientLightGain(DEFAULT_AGAIN) ) {
-#        return false;
-#    }
-#    if( interrupts ) {
-#        if( !setAmbientLightIntEnable(1) ) {
-#            return false;
-#        }
-#    } else {
-#        if( !setAmbientLightIntEnable(0) ) {
-#            return false;
-#        }
-#    }
-#    if( !enablePower() ){
-#        return false;
-#    }
-#    if( !setMode(AMBIENT_LIGHT, 1) ) {
-#        return false;
-#    }
-#    
-#    return true;
-#
-#}
+    def getGestureWaitTime(self):
+        return self.getVal(APDS9960_GCONF2,0x7,0)
+
 #
 #/**
-# * @brief Ends the light sensor on the APDS-9960
+# * @brief Sets the time in low power mode between gesture detections
 # *
-# * @return True if sensor disabled correctly. False on error.
+# * Value    Wait time
+# *   0          0 ms
+# *   1          2.8 ms
+# *   2          5.6 ms
+# *   3          8.4 ms
+# *   4         14.0 ms
+# *   5         22.4 ms
+# *   6         30.8 ms
+# *   7         39.2 ms
+# *
+# * @param[in] the value for the wait time
+# * @return True if operation successful. False otherwise.
 # */
-#bool SparkFun_APDS9960::disableLightSensor()
-#{
-#    if( !setAmbientLightIntEnable(0) ) {
-#        return false;
-#    }
-#    if( !setMode(AMBIENT_LIGHT, 0) ) {
-#        return false;
-#    }
-#    
-#    return true;
-#}
+    def setGestureWaitTime(self, time):
+        self.setVal(APDS9960_GCONF2,0x7,0,time)
 #
 #/**
-# * @brief Starts the proximity sensor on the APDS-9960
+# * @brief Gets the low threshold for ambient light interrupts
 # *
-# * @param[in] interrupts true to enable hardware external interrupt on proximity
-# * @return True if sensor enabled correctly. False on error.
+# * @param[out] threshold current low threshold stored on the APDS-9960
+# * @return True if operation successful. False otherwise.
 # */
-#bool SparkFun_APDS9960::enableProximitySensor(bool interrupts)
-#{
-#    /* Set default gain, LED, interrupts, enable power, and enable sensor */
-#    if( !setProximityGain(DEFAULT_PGAIN) ) {
-#        return false;
-#    }
-#    if( !setLEDDrive(DEFAULT_LDRIVE) ) {
-#        return false;
-#    }
-#    if( interrupts ) {
-#        if( !setProximityIntEnable(1) ) {
-#            return false;
-#        }
-#    } else {
-#        if( !setProximityIntEnable(0) ) {
-#            return false;
-#        }
-#    }
-#    if( !enablePower() ){
-#        return false;
-#    }
-#    if( !setMode(PROXIMITY, 1) ) {
-#        return false;
-#    }
-#    
-#    return true;
-#}
-#
-#/**
-# * @brief Ends the proximity sensor on the APDS-9960
-# *
-# * @return True if sensor disabled correctly. False on error.
-# */
-#bool SparkFun_APDS9960::disableProximitySensor()
-#{
-#	if( !setProximityIntEnable(0) ) {
-#		return false;
-#	}
-#	if( !setMode(PROXIMITY, 0) ) {
-#		return false;
-#	}
-#
-#	return true;
-#}
-#
-#/**
-# * @brief Starts the gesture recognition engine on the APDS-9960
-# *
-# * @param[in] interrupts true to enable hardware external interrupt on gesture
-# * @return True if engine enabled correctly. False on error.
-# */
-#bool SparkFun_APDS9960::enableGestureSensor(bool interrupts)
-#{
-#    
-#    /* Enable gesture mode
-#       Set ENABLE to 0 (power off)
-#       Set WTIME to 0xFF
-#       Set AUX to LED_BOOST_300
-#       Enable PON, WEN, PEN, GEN in ENABLE 
-#    */
-#    resetGestureParameters();
-#    if( !wireWriteDataByte(APDS9960_WTIME, 0xFF) ) {
-#        return false;
-#    }
-#    if( !wireWriteDataByte(APDS9960_PPULSE, DEFAULT_GESTURE_PPULSE) ) {
-#        return false;
-#    }
-#    if( !setLEDBoost(LED_BOOST_300) ) {
-#        return false;
-#    }
-#    if( interrupts ) {
-#        if( !setGestureIntEnable(1) ) {
-#            return false;
-#        }
-#    } else {
-#        if( !setGestureIntEnable(0) ) {
-#            return false;
-#        }
-#    }
-#    if( !setGestureMode(1) ) {
-#        return false;
-#    }
-#    if( !enablePower() ){
-#        return false;
-#    }
-#    if( !setMode(WAIT, 1) ) {
-#        return false;
-#    }
-#    if( !setMode(PROXIMITY, 1) ) {
-#        return false;
-#    }
-#    if( !setMode(GESTURE, 1) ) {
-#        return false;
-#    }
-#    
-#    return true;
-#}
-#
-#/**
-# * @brief Ends the gesture recognition engine on the APDS-9960
-# *
-# * @return True if engine disabled correctly. False on error.
-# */
-#bool SparkFun_APDS9960::disableGestureSensor()
-#{
-#    resetGestureParameters();
-#    if( !setGestureIntEnable(0) ) {
-#        return false;
-#    }
-#    if( !setGestureMode(0) ) {
-#        return false;
-#    }
-#    if( !setMode(GESTURE, 0) ) {
-#        return false;
-#    }
-#    
-#    return true;
-#}
-#
-#/**
-# * @brief Determines if there is a gesture available for reading
-# *
-# * @return True if gesture available. False otherwise.
-# */
-#bool SparkFun_APDS9960::isGestureAvailable()
-#{
-#    uint8_t val;
-#    
-#    /* Read value from GSTATUS register */
-#    if( !wireReadDataByte(APDS9960_GSTATUS, val) ) {
-#        return ERROR;
-#    }
-#    
-#    /* Shift and mask out GVALID bit */
-#    val &= APDS9960_GVALID;
-#    
-#    /* Return true/false based on GVALID bit */
-#    if( val == 1) {
-#        return true;
-#    } else {
-#        return false;
-#    }
-#}
+
+
+    def getLightIntLowThreshold(self, threshold):
+        vallow = self._device.read_byte_data(self._devaddr, APDS9960_AILTL)
+        valhi = self._device.read_byte_data(self._devaddr, APDS9960_AILTH)
+        return vallow + valhi<<8
+
+    def setLightIntLowThreshold(self, threshold):
+        vallow = threshold & 0x00ff
+        valhi = (threshold >>8) & 0x00ff 
+        self._device.write_byte_data(self._devaddr, APDS9960_AILTL, vallow)
+        self._device.write_byte_data(self._devaddr, APDS9960_AILTH, valhi)
+  
+    def getLightIntHighThreshold(self, threshold):
+        vallow = self._device.read_byte_data(self._devaddr, APDS9960_AIHTL)
+        valhi = self._device.read_byte_data(self._devaddr, APDS9960_AIHTL)
+        return vallow + valhi<<8
+
+    def setLightIntHighThreshold(self, threshold):
+        vallow = threshold & 0x00ff
+        valhi = (threshold >>8) & 0x00ff 
+        self._device.write_byte_data(self._devaddr, APDS9960_AIHTL, vallow)
+        self._device.write_byte_data(self._devaddr, APDS9960_AIHTL, valhi)
+
+
+    def getProximityIntLowThreshold(self):
+        return self._device.read_byte_data(self._devaddr, APDS9960_PILT)
+
+    def setProximityIntLowThreshold(self,val):
+        self._device.write_byte_data(self._devaddr, APDS9960_PILT, val)
+
+    def getProximityIntHighThreshold(self):
+        return self._device.read_byte_data(self._devaddr, APDS9960_PIHT)
+
+    def setProximityIntHighThreshold(self,val):
+        self._device.write_byte_data(self._devaddr, APDS9960_PIHT, val)
+
+    def getAmbientLightIntEnable(self):
+        return self.getVal(APDS9960_ENABLE,0x1,4)
+
+    def setAmbientLightIntEnable(self, val):
+        self.setVal(APDS9960_ENABLE,0x1,4,val)
+
+    def getProximityIntEnable(self):
+        return self.getVal(APDS9960_ENABLE,0x1,5)
+
+    def setProximityIntEnable(self, val):
+        self.setVal(APDS9960_ENABLE,0x1,5,val)
+
+    def getGestureIntEnable(self):
+        return self.getVal(APDS9960_GCONF4,0x1,1)
+
+    def setGestureIntEnable(self, val):
+        self.setVal(APDS9960_GCONF4,0x1,1,val)
+
+    def clearAmbientLightInt(self):
+        self._device.read_byte_data(self._devaddr, APDS9960_AICLEAR)
+
+    def clearProximityInt(self):
+        self._device.read_byte_data(self._devaddr, APDS9960_PICLEAR)
+
+    def getGestureMode(self):
+        return self.getVal(APDS9960_GCONF4,0x1,0)
+
+    def setGestureMode(self, val):
+        self.setVal(APDS9960_GCONF4,0x1,0,val)
+
+
+
+info()
+
+sensor = APDS9960(bus=1)
+sensor.initDevice()
+print "Done"
+sensor.enableLightSensor(0)
+time.sleep(0.5) # delay 500ms for autocalibration
+light=sensor.readAmbientLight()
+print "light={}".format(light)
+red=sensor.readRedLight()
+green=sensor.readGreenLight()
+blue=sensor.readBlueLight()
+print "Light Colors({},{},{})".format(red,green,blue)
+#sensor.disableLightSensor()
+
+#enable proximity sensor with no interrupts
+sensor.setProximityGain(PGAIN_2X)
+sensor.enableProximitySensor(0)
+time.sleep(0.5)
+i=100
+while i >0:
+    i-=1
+    print i
+    light=sensor.readAmbientLight()
+    print "light={}".format(light)
+    red=sensor.readRedLight()
+    green=sensor.readGreenLight()
+    blue=sensor.readBlueLight()
+    print "Light Colors({},{},{})".format(red,green,blue)
+    prox=sensor.readProximity()
+    print "Proximity = {}".format(prox)
+    time.sleep(1.5)
+print "Done"
+
+
 #
 #/**
 # * @brief Processes a gesture event and returns best guessed gesture
@@ -561,163 +662,6 @@ class APDS9960:
 #    }
 #}
 #
-#/**
-# * Turn the APDS-9960 on
-# *
-# * @return True if operation successful. False otherwise.
-# */
-#bool SparkFun_APDS9960::enablePower()
-#{
-#    if( !setMode(POWER, 1) ) {
-#        return false;
-#    }
-#    
-#    return true;
-#}
-#
-#/**
-# * Turn the APDS-9960 off
-# *
-# * @return True if operation successful. False otherwise.
-# */
-#bool SparkFun_APDS9960::disablePower()
-#{
-#    if( !setMode(POWER, 0) ) {
-#        return false;
-#    }
-#    
-#    return true;
-#}
-#
-#/*******************************************************************************
-# * Ambient light and color sensor controls
-# ******************************************************************************/
-#
-#/**
-# * @brief Reads the ambient (clear) light level as a 16-bit value
-# *
-# * @param[out] val value of the light sensor.
-# * @return True if operation successful. False otherwise.
-# */
-#bool SparkFun_APDS9960::readAmbientLight(uint16_t &val)
-#{
-#    uint8_t val_byte;
-#    val = 0;
-#    
-#    /* Read value from clear channel, low byte register */
-#    if( !wireReadDataByte(APDS9960_CDATAL, val_byte) ) {
-#        return false;
-#    }
-#    val = val_byte;
-#    
-#    /* Read value from clear channel, high byte register */
-#    if( !wireReadDataByte(APDS9960_CDATAH, val_byte) ) {
-#        return false;
-#    }
-#    val = val + ((uint16_t)val_byte << 8);
-#    
-#    return true;
-#}
-#
-#/**
-# * @brief Reads the red light level as a 16-bit value
-# *
-# * @param[out] val value of the light sensor.
-# * @return True if operation successful. False otherwise.
-# */
-#bool SparkFun_APDS9960::readRedLight(uint16_t &val)
-#{
-#    uint8_t val_byte;
-#    val = 0;
-#    
-#    /* Read value from clear channel, low byte register */
-#    if( !wireReadDataByte(APDS9960_RDATAL, val_byte) ) {
-#        return false;
-#    }
-#    val = val_byte;
-#    
-#    /* Read value from clear channel, high byte register */
-#    if( !wireReadDataByte(APDS9960_RDATAH, val_byte) ) {
-#        return false;
-#    }
-#    val = val + ((uint16_t)val_byte << 8);
-#    
-#    return true;
-#}
-# 
-#/**
-# * @brief Reads the green light level as a 16-bit value
-# *
-# * @param[out] val value of the light sensor.
-# * @return True if operation successful. False otherwise.
-# */
-#bool SparkFun_APDS9960::readGreenLight(uint16_t &val)
-#{
-#    uint8_t val_byte;
-#    val = 0;
-#    
-#    /* Read value from clear channel, low byte register */
-#    if( !wireReadDataByte(APDS9960_GDATAL, val_byte) ) {
-#        return false;
-#    }
-#    val = val_byte;
-#    
-#    /* Read value from clear channel, high byte register */
-#    if( !wireReadDataByte(APDS9960_GDATAH, val_byte) ) {
-#        return false;
-#    }
-#    val = val + ((uint16_t)val_byte << 8);
-#    
-#    return true;
-#}
-#
-#/**
-# * @brief Reads the red light level as a 16-bit value
-# *
-# * @param[out] val value of the light sensor.
-# * @return True if operation successful. False otherwise.
-# */
-#bool SparkFun_APDS9960::readBlueLight(uint16_t &val)
-#{
-#    uint8_t val_byte;
-#    val = 0;
-#    
-#    /* Read value from clear channel, low byte register */
-#    if( !wireReadDataByte(APDS9960_BDATAL, val_byte) ) {
-#        return false;
-#    }
-#    val = val_byte;
-#    
-#    /* Read value from clear channel, high byte register */
-#    if( !wireReadDataByte(APDS9960_BDATAH, val_byte) ) {
-#        return false;
-#    }
-#    val = val + ((uint16_t)val_byte << 8);
-#    
-#    return true;
-#}
-#
-#/*******************************************************************************
-# * Proximity sensor controls
-# ******************************************************************************/
-#
-#/**
-# * @brief Reads the proximity level as an 8-bit value
-# *
-# * @param[out] val value of the proximity sensor.
-# * @return True if operation successful. False otherwise.
-# */
-#bool SparkFun_APDS9960::readProximity(uint8_t &val)
-#{
-#    val = 0;
-#    
-#    /* Read value from proximity data register */
-#    if( !wireReadDataByte(APDS9960_PDATA, val) ) {
-#        return false;
-#    }
-#    
-#    return true;
-#}
 #
 #/*******************************************************************************
 # * High-level gesture controls
@@ -1000,1205 +944,4 @@ class APDS9960:
 #    }
 #    
 #    return true;
-#}
-#
-#/*******************************************************************************
-# * Getters and setters for register values
-# ******************************************************************************/
-#
-#/**
-# * @brief Returns the lower threshold for proximity detection
-# *
-# * @return lower threshold
-# */
-#uint8_t SparkFun_APDS9960::getProxIntLowThresh()
-#{
-#    uint8_t val;
-#    
-#    /* Read value from PILT register */
-#    if( !wireReadDataByte(APDS9960_PILT, val) ) {
-#        val = 0;
-#    }
-#    
-#    return val;
-#}
-#
-#/**
-# * @brief Sets the lower threshold for proximity detection
-# *
-# * @param[in] threshold the lower proximity threshold
-# * @return True if operation successful. False otherwise.
-# */
-#bool SparkFun_APDS9960::setProxIntLowThresh(uint8_t threshold)
-#{
-#    if( !wireWriteDataByte(APDS9960_PILT, threshold) ) {
-#        return false;
-#    }
-#    
-#    return true;
-#}
-#
-#/**
-# * @brief Returns the high threshold for proximity detection
-# *
-# * @return high threshold
-# */
-#uint8_t SparkFun_APDS9960::getProxIntHighThresh()
-#{
-#    uint8_t val;
-#    
-#    /* Read value from PIHT register */
-#    if( !wireReadDataByte(APDS9960_PIHT, val) ) {
-#        val = 0;
-#    }
-#    
-#    return val;
-#}
-#
-#/**
-# * @brief Sets the high threshold for proximity detection
-# *
-# * @param[in] threshold the high proximity threshold
-# * @return True if operation successful. False otherwise.
-# */
-#bool SparkFun_APDS9960::setProxIntHighThresh(uint8_t threshold)
-#{
-#    if( !wireWriteDataByte(APDS9960_PIHT, threshold) ) {
-#        return false;
-#    }
-#    
-#    return true;
-#}
-#
-#/**
-# * @brief Returns LED drive strength for proximity and ALS
-# *
-# * Value    LED Current
-# *   0        100 mA
-# *   1         50 mA
-# *   2         25 mA
-# *   3         12.5 mA
-# *
-# * @return the value of the LED drive strength. 0xFF on failure.
-# */
-#uint8_t SparkFun_APDS9960::getLEDDrive()
-#{
-#    uint8_t val;
-#    
-#    /* Read value from CONTROL register */
-#    if( !wireReadDataByte(APDS9960_CONTROL, val) ) {
-#        return ERROR;
-#    }
-#    
-#    /* Shift and mask out LED drive bits */
-#    val = (val >> 6) & 0b00000011;
-#    
-#    return val;
-#}
-#
-#/**
-# * @brief Sets the LED drive strength for proximity and ALS
-# *
-# * Value    LED Current
-# *   0        100 mA
-# *   1         50 mA
-# *   2         25 mA
-# *   3         12.5 mA
-# *
-# * @param[in] drive the value (0-3) for the LED drive strength
-# * @return True if operation successful. False otherwise.
-# */
-#bool SparkFun_APDS9960::setLEDDrive(uint8_t drive)
-#{
-#    uint8_t val;
-#    
-#    /* Read value from CONTROL register */
-#    if( !wireReadDataByte(APDS9960_CONTROL, val) ) {
-#        return false;
-#    }
-#    
-#    /* Set bits in register to given value */
-#    drive &= 0b00000011;
-#    drive = drive << 6;
-#    val &= 0b00111111;
-#    val |= drive;
-#    
-#    /* Write register value back into CONTROL register */
-#    if( !wireWriteDataByte(APDS9960_CONTROL, val) ) {
-#        return false;
-#    }
-#    
-#    return true;
-#}
-#
-#/**
-# * @brief Returns receiver gain for proximity detection
-# *
-# * Value    Gain
-# *   0       1x
-# *   1       2x
-# *   2       4x
-# *   3       8x
-# *
-# * @return the value of the proximity gain. 0xFF on failure.
-# */
-#uint8_t SparkFun_APDS9960::getProximityGain()
-#{
-#    uint8_t val;
-#    
-#    /* Read value from CONTROL register */
-#    if( !wireReadDataByte(APDS9960_CONTROL, val) ) {
-#        return ERROR;
-#    }
-#    
-#    /* Shift and mask out PDRIVE bits */
-#    val = (val >> 2) & 0b00000011;
-#    
-#    return val;
-#}
-#
-#/**
-# * @brief Sets the receiver gain for proximity detection
-# *
-# * Value    Gain
-# *   0       1x
-# *   1       2x
-# *   2       4x
-# *   3       8x
-# *
-# * @param[in] drive the value (0-3) for the gain
-# * @return True if operation successful. False otherwise.
-# */
-#bool SparkFun_APDS9960::setProximityGain(uint8_t drive)
-#{
-#    uint8_t val;
-#    
-#    /* Read value from CONTROL register */
-#    if( !wireReadDataByte(APDS9960_CONTROL, val) ) {
-#        return false;
-#    }
-#    
-#    /* Set bits in register to given value */
-#    drive &= 0b00000011;
-#    drive = drive << 2;
-#    val &= 0b11110011;
-#    val |= drive;
-#    
-#    /* Write register value back into CONTROL register */
-#    if( !wireWriteDataByte(APDS9960_CONTROL, val) ) {
-#        return false;
-#    }
-#    
-#    return true;
-#}
-#
-#/**
-# * @brief Returns receiver gain for the ambient light sensor (ALS)
-# *
-# * Value    Gain
-# *   0        1x
-# *   1        4x
-# *   2       16x
-# *   3       64x
-# *
-# * @return the value of the ALS gain. 0xFF on failure.
-# */
-#uint8_t SparkFun_APDS9960::getAmbientLightGain()
-#{
-#    uint8_t val;
-#    
-#    /* Read value from CONTROL register */
-#    if( !wireReadDataByte(APDS9960_CONTROL, val) ) {
-#        return ERROR;
-#    }
-#    
-#    /* Shift and mask out ADRIVE bits */
-#    val &= 0b00000011;
-#    
-#    return val;
-#}
-#
-#/**
-# * @brief Sets the receiver gain for the ambient light sensor (ALS)
-# *
-# * Value    Gain
-# *   0        1x
-# *   1        4x
-# *   2       16x
-# *   3       64x
-# *
-# * @param[in] drive the value (0-3) for the gain
-# * @return True if operation successful. False otherwise.
-# */
-#bool SparkFun_APDS9960::setAmbientLightGain(uint8_t drive)
-#{
-#    uint8_t val;
-#    
-#    /* Read value from CONTROL register */
-#    if( !wireReadDataByte(APDS9960_CONTROL, val) ) {
-#        return false;
-#    }
-#    
-#    /* Set bits in register to given value */
-#    drive &= 0b00000011;
-#    val &= 0b11111100;
-#    val |= drive;
-#    
-#    /* Write register value back into CONTROL register */
-#    if( !wireWriteDataByte(APDS9960_CONTROL, val) ) {
-#        return false;
-#    }
-#    
-#    return true;
-#}
-#
-#/**
-# * @brief Get the current LED boost value
-# * 
-# * Value  Boost Current
-# *   0        100%
-# *   1        150%
-# *   2        200%
-# *   3        300%
-# *
-# * @return The LED boost value. 0xFF on failure.
-# */
-#uint8_t SparkFun_APDS9960::getLEDBoost()
-#{
-#    uint8_t val;
-#    
-#    /* Read value from CONFIG2 register */
-#    if( !wireReadDataByte(APDS9960_CONFIG2, val) ) {
-#        return ERROR;
-#    }
-#    
-#    /* Shift and mask out LED_BOOST bits */
-#    val = (val >> 4) & 0b00000011;
-#    
-#    return val;
-#}
-#
-#/**
-# * @brief Sets the LED current boost value
-# *
-# * Value  Boost Current
-# *   0        100%
-# *   1        150%
-# *   2        200%
-# *   3        300%
-# *
-# * @param[in] drive the value (0-3) for current boost (100-300%)
-# * @return True if operation successful. False otherwise.
-# */
-#bool SparkFun_APDS9960::setLEDBoost(uint8_t boost)
-#{
-#    uint8_t val;
-#    
-#    /* Read value from CONFIG2 register */
-#    if( !wireReadDataByte(APDS9960_CONFIG2, val) ) {
-#        return false;
-#    }
-#    
-#    /* Set bits in register to given value */
-#    boost &= 0b00000011;
-#    boost = boost << 4;
-#    val &= 0b11001111;
-#    val |= boost;
-#    
-#    /* Write register value back into CONFIG2 register */
-#    if( !wireWriteDataByte(APDS9960_CONFIG2, val) ) {
-#        return false;
-#    }
-#    
-#    return true;
-#}    
-#   
-#/**
-# * @brief Gets proximity gain compensation enable
-# *
-# * @return 1 if compensation is enabled. 0 if not. 0xFF on error.
-# */
-#uint8_t SparkFun_APDS9960::getProxGainCompEnable()
-#{
-#    uint8_t val;
-#    
-#    /* Read value from CONFIG3 register */
-#    if( !wireReadDataByte(APDS9960_CONFIG3, val) ) {
-#        return ERROR;
-#    }
-#    
-#    /* Shift and mask out PCMP bits */
-#    val = (val >> 5) & 0b00000001;
-#    
-#    return val;
-#}
-#
-#/**
-# * @brief Sets the proximity gain compensation enable
-# *
-# * @param[in] enable 1 to enable compensation. 0 to disable compensation.
-# * @return True if operation successful. False otherwise.
-# */
-# bool SparkFun_APDS9960::setProxGainCompEnable(uint8_t enable)
-#{
-#    uint8_t val;
-#    
-#    /* Read value from CONFIG3 register */
-#    if( !wireReadDataByte(APDS9960_CONFIG3, val) ) {
-#        return false;
-#    }
-#    
-#    /* Set bits in register to given value */
-#    enable &= 0b00000001;
-#    enable = enable << 5;
-#    val &= 0b11011111;
-#    val |= enable;
-#    
-#    /* Write register value back into CONFIG3 register */
-#    if( !wireWriteDataByte(APDS9960_CONFIG3, val) ) {
-#        return false;
-#    }
-#    
-#    return true;
-#}
-#
-#/**
-# * @brief Gets the current mask for enabled/disabled proximity photodiodes
-# *
-# * 1 = disabled, 0 = enabled
-# * Bit    Photodiode
-# *  3       UP
-# *  2       DOWN
-# *  1       LEFT
-# *  0       RIGHT
-# *
-# * @return Current proximity mask for photodiodes. 0xFF on error.
-# */
-#uint8_t SparkFun_APDS9960::getProxPhotoMask()
-#{
-#    uint8_t val;
-#    
-#    /* Read value from CONFIG3 register */
-#    if( !wireReadDataByte(APDS9960_CONFIG3, val) ) {
-#        return ERROR;
-#    }
-#    
-#    /* Mask out photodiode enable mask bits */
-#    val &= 0b00001111;
-#    
-#    return val;
-#}
-#
-#/**
-# * @brief Sets the mask for enabling/disabling proximity photodiodes
-# *
-# * 1 = disabled, 0 = enabled
-# * Bit    Photodiode
-# *  3       UP
-# *  2       DOWN
-# *  1       LEFT
-# *  0       RIGHT
-# *
-# * @param[in] mask 4-bit mask value
-# * @return True if operation successful. False otherwise.
-# */
-#bool SparkFun_APDS9960::setProxPhotoMask(uint8_t mask)
-#{
-#    uint8_t val;
-#    
-#    /* Read value from CONFIG3 register */
-#    if( !wireReadDataByte(APDS9960_CONFIG3, val) ) {
-#        return false;
-#    }
-#    
-#    /* Set bits in register to given value */
-#    mask &= 0b00001111;
-#    val &= 0b11110000;
-#    val |= mask;
-#    
-#    /* Write register value back into CONFIG3 register */
-#    if( !wireWriteDataByte(APDS9960_CONFIG3, val) ) {
-#        return false;
-#    }
-#    
-#    return true;
-#}
-#
-#/**
-# * @brief Gets the entry proximity threshold for gesture sensing
-# *
-# * @return Current entry proximity threshold.
-# */
-#uint8_t SparkFun_APDS9960::getGestureEnterThresh()
-#{
-#    uint8_t val;
-#    
-#    /* Read value from GPENTH register */
-#    if( !wireReadDataByte(APDS9960_GPENTH, val) ) {
-#        val = 0;
-#    }
-#    
-#    return val;
-#}
-#
-#/**
-# * @brief Sets the entry proximity threshold for gesture sensing
-# *
-# * @param[in] threshold proximity value needed to start gesture mode
-# * @return True if operation successful. False otherwise.
-# */
-#bool SparkFun_APDS9960::setGestureEnterThresh(uint8_t threshold)
-#{
-#    if( !wireWriteDataByte(APDS9960_GPENTH, threshold) ) {
-#        return false;
-#    }
-#    
-#    return true;
-#}
-#
-#/**
-# * @brief Gets the exit proximity threshold for gesture sensing
-# *
-# * @return Current exit proximity threshold.
-# */
-#uint8_t SparkFun_APDS9960::getGestureExitThresh()
-#{
-#    uint8_t val;
-#    
-#    /* Read value from GEXTH register */
-#    if( !wireReadDataByte(APDS9960_GEXTH, val) ) {
-#        val = 0;
-#    }
-#    
-#    return val;
-#}
-#
-#/**
-# * @brief Sets the exit proximity threshold for gesture sensing
-# *
-# * @param[in] threshold proximity value needed to end gesture mode
-# * @return True if operation successful. False otherwise.
-# */
-#bool SparkFun_APDS9960::setGestureExitThresh(uint8_t threshold)
-#{
-#    if( !wireWriteDataByte(APDS9960_GEXTH, threshold) ) {
-#        return false;
-#    }
-#    
-#    return true;
-#}
-#
-#/**
-# * @brief Gets the gain of the photodiode during gesture mode
-# *
-# * Value    Gain
-# *   0       1x
-# *   1       2x
-# *   2       4x
-# *   3       8x
-# *
-# * @return the current photodiode gain. 0xFF on error.
-# */
-#uint8_t SparkFun_APDS9960::getGestureGain()
-#{
-#    uint8_t val;
-#    
-#    /* Read value from GCONF2 register */
-#    if( !wireReadDataByte(APDS9960_GCONF2, val) ) {
-#        return ERROR;
-#    }
-#    
-#    /* Shift and mask out GGAIN bits */
-#    val = (val >> 5) & 0b00000011;
-#    
-#    return val;
-#}
-#
-#/**
-# * @brief Sets the gain of the photodiode during gesture mode
-# *
-# * Value    Gain
-# *   0       1x
-# *   1       2x
-# *   2       4x
-# *   3       8x
-# *
-# * @param[in] gain the value for the photodiode gain
-# * @return True if operation successful. False otherwise.
-# */
-#bool SparkFun_APDS9960::setGestureGain(uint8_t gain)
-#{
-#    uint8_t val;
-#    
-#    /* Read value from GCONF2 register */
-#    if( !wireReadDataByte(APDS9960_GCONF2, val) ) {
-#        return false;
-#    }
-#    
-#    /* Set bits in register to given value */
-#    gain &= 0b00000011;
-#    gain = gain << 5;
-#    val &= 0b10011111;
-#    val |= gain;
-#    
-#    /* Write register value back into GCONF2 register */
-#    if( !wireWriteDataByte(APDS9960_GCONF2, val) ) {
-#        return false;
-#    }
-#    
-#    return true;
-#}
-#
-#/**
-# * @brief Gets the drive current of the LED during gesture mode
-# *
-# * Value    LED Current
-# *   0        100 mA
-# *   1         50 mA
-# *   2         25 mA
-# *   3         12.5 mA
-# *
-# * @return the LED drive current value. 0xFF on error.
-# */
-#uint8_t SparkFun_APDS9960::getGestureLEDDrive()
-#{
-#    uint8_t val;
-#    
-#    /* Read value from GCONF2 register */
-#    if( !wireReadDataByte(APDS9960_GCONF2, val) ) {
-#        return ERROR;
-#    }
-#    
-#    /* Shift and mask out GLDRIVE bits */
-#    val = (val >> 3) & 0b00000011;
-#    
-#    return val;
-#}
-#
-#/**
-# * @brief Sets the LED drive current during gesture mode
-# *
-# * Value    LED Current
-# *   0        100 mA
-# *   1         50 mA
-# *   2         25 mA
-# *   3         12.5 mA
-# *
-# * @param[in] drive the value for the LED drive current
-# * @return True if operation successful. False otherwise.
-# */
-#bool SparkFun_APDS9960::setGestureLEDDrive(uint8_t drive)
-#{
-#    uint8_t val;
-#    
-#    /* Read value from GCONF2 register */
-#    if( !wireReadDataByte(APDS9960_GCONF2, val) ) {
-#        return false;
-#    }
-#    
-#    /* Set bits in register to given value */
-#    drive &= 0b00000011;
-#    drive = drive << 3;
-#    val &= 0b11100111;
-#    val |= drive;
-#    
-#    /* Write register value back into GCONF2 register */
-#    if( !wireWriteDataByte(APDS9960_GCONF2, val) ) {
-#        return false;
-#    }
-#    
-#    return true;
-#}
-#
-#/**
-# * @brief Gets the time in low power mode between gesture detections
-# *
-# * Value    Wait time
-# *   0          0 ms
-# *   1          2.8 ms
-# *   2          5.6 ms
-# *   3          8.4 ms
-# *   4         14.0 ms
-# *   5         22.4 ms
-# *   6         30.8 ms
-# *   7         39.2 ms
-# *
-# * @return the current wait time between gestures. 0xFF on error.
-# */
-#uint8_t SparkFun_APDS9960::getGestureWaitTime()
-#{
-#    uint8_t val;
-#    
-#    /* Read value from GCONF2 register */
-#    if( !wireReadDataByte(APDS9960_GCONF2, val) ) {
-#        return ERROR;
-#    }
-#    
-#    /* Mask out GWTIME bits */
-#    val &= 0b00000111;
-#    
-#    return val;
-#}
-#
-#/**
-# * @brief Sets the time in low power mode between gesture detections
-# *
-# * Value    Wait time
-# *   0          0 ms
-# *   1          2.8 ms
-# *   2          5.6 ms
-# *   3          8.4 ms
-# *   4         14.0 ms
-# *   5         22.4 ms
-# *   6         30.8 ms
-# *   7         39.2 ms
-# *
-# * @param[in] the value for the wait time
-# * @return True if operation successful. False otherwise.
-# */
-#bool SparkFun_APDS9960::setGestureWaitTime(uint8_t time)
-#{
-#    uint8_t val;
-#    
-#    /* Read value from GCONF2 register */
-#    if( !wireReadDataByte(APDS9960_GCONF2, val) ) {
-#        return false;
-#    }
-#    
-#    /* Set bits in register to given value */
-#    time &= 0b00000111;
-#    val &= 0b11111000;
-#    val |= time;
-#    
-#    /* Write register value back into GCONF2 register */
-#    if( !wireWriteDataByte(APDS9960_GCONF2, val) ) {
-#        return false;
-#    }
-#    
-#    return true;
-#}
-#
-#/**
-# * @brief Gets the low threshold for ambient light interrupts
-# *
-# * @param[out] threshold current low threshold stored on the APDS-9960
-# * @return True if operation successful. False otherwise.
-# */
-#bool SparkFun_APDS9960::getLightIntLowThreshold(uint16_t &threshold)
-#{
-#    uint8_t val_byte;
-#    threshold = 0;
-#    
-#    /* Read value from ambient light low threshold, low byte register */
-#    if( !wireReadDataByte(APDS9960_AILTL, val_byte) ) {
-#        return false;
-#    }
-#    threshold = val_byte;
-#    
-#    /* Read value from ambient light low threshold, high byte register */
-#    if( !wireReadDataByte(APDS9960_AILTH, val_byte) ) {
-#        return false;
-#    }
-#    threshold = threshold + ((uint16_t)val_byte << 8);
-#    
-#    return true;
-#}
-#
-#/**
-# * @brief Sets the low threshold for ambient light interrupts
-# *
-# * @param[in] threshold low threshold value for interrupt to trigger
-# * @return True if operation successful. False otherwise.
-# */
-#bool SparkFun_APDS9960::setLightIntLowThreshold(uint16_t threshold)
-#{
-#    uint8_t val_low;
-#    uint8_t val_high;
-#    
-#    /* Break 16-bit threshold into 2 8-bit values */
-#    val_low = threshold & 0x00FF;
-#    val_high = (threshold & 0xFF00) >> 8;
-#    
-#    /* Write low byte */
-#    if( !wireWriteDataByte(APDS9960_AILTL, val_low) ) {
-#        return false;
-#    }
-#    
-#    /* Write high byte */
-#    if( !wireWriteDataByte(APDS9960_AILTH, val_high) ) {
-#        return false;
-#    }
-#    
-#    return true;
-#}
-#
-#/**
-# * @brief Gets the high threshold for ambient light interrupts
-# *
-# * @param[out] threshold current low threshold stored on the APDS-9960
-# * @return True if operation successful. False otherwise.
-# */
-#bool SparkFun_APDS9960::getLightIntHighThreshold(uint16_t &threshold)
-#{
-#    uint8_t val_byte;
-#    threshold = 0;
-#    
-#    /* Read value from ambient light high threshold, low byte register */
-#    if( !wireReadDataByte(APDS9960_AIHTL, val_byte) ) {
-#        return false;
-#    }
-#    threshold = val_byte;
-#    
-#    /* Read value from ambient light high threshold, high byte register */
-#    if( !wireReadDataByte(APDS9960_AIHTH, val_byte) ) {
-#        return false;
-#    }
-#    threshold = threshold + ((uint16_t)val_byte << 8);
-#    
-#    return true;
-#}
-#
-#/**
-# * @brief Sets the high threshold for ambient light interrupts
-# *
-# * @param[in] threshold high threshold value for interrupt to trigger
-# * @return True if operation successful. False otherwise.
-# */
-#bool SparkFun_APDS9960::setLightIntHighThreshold(uint16_t threshold)
-#{
-#    uint8_t val_low;
-#    uint8_t val_high;
-#    
-#    /* Break 16-bit threshold into 2 8-bit values */
-#    val_low = threshold & 0x00FF;
-#    val_high = (threshold & 0xFF00) >> 8;
-#    
-#    /* Write low byte */
-#    if( !wireWriteDataByte(APDS9960_AIHTL, val_low) ) {
-#        return false;
-#    }
-#    
-#    /* Write high byte */
-#    if( !wireWriteDataByte(APDS9960_AIHTH, val_high) ) {
-#        return false;
-#    }
-#    
-#    return true;
-#}
-#
-#/**
-# * @brief Gets the low threshold for proximity interrupts
-# *
-# * @param[out] threshold current low threshold stored on the APDS-9960
-# * @return True if operation successful. False otherwise.
-# */
-#bool SparkFun_APDS9960::getProximityIntLowThreshold(uint8_t &threshold)
-#{
-#    threshold = 0;
-#    
-#    /* Read value from proximity low threshold register */
-#    if( !wireReadDataByte(APDS9960_PILT, threshold) ) {
-#        return false;
-#    }
-#    
-#    return true;
-#}
-#
-#/**
-# * @brief Sets the low threshold for proximity interrupts
-# *
-# * @param[in] threshold low threshold value for interrupt to trigger
-# * @return True if operation successful. False otherwise.
-# */
-#bool SparkFun_APDS9960::setProximityIntLowThreshold(uint8_t threshold)
-#{
-#    
-#    /* Write threshold value to register */
-#    if( !wireWriteDataByte(APDS9960_PILT, threshold) ) {
-#        return false;
-#    }
-#    
-#    return true;
-#}
-#    
-#/**
-# * @brief Gets the high threshold for proximity interrupts
-# *
-# * @param[out] threshold current low threshold stored on the APDS-9960
-# * @return True if operation successful. False otherwise.
-# */
-#bool SparkFun_APDS9960::getProximityIntHighThreshold(uint8_t &threshold)
-#{
-#    threshold = 0;
-#    
-#    /* Read value from proximity low threshold register */
-#    if( !wireReadDataByte(APDS9960_PIHT, threshold) ) {
-#        return false;
-#    }
-#    
-#    return true;
-#}
-#
-#/**
-# * @brief Sets the high threshold for proximity interrupts
-# *
-# * @param[in] threshold high threshold value for interrupt to trigger
-# * @return True if operation successful. False otherwise.
-# */
-#bool SparkFun_APDS9960::setProximityIntHighThreshold(uint8_t threshold)
-#{
-#    
-#    /* Write threshold value to register */
-#    if( !wireWriteDataByte(APDS9960_PIHT, threshold) ) {
-#        return false;
-#    }
-#    
-#    return true;
-#}
-#
-#/**
-# * @brief Gets if ambient light interrupts are enabled or not
-# *
-# * @return 1 if interrupts are enabled, 0 if not. 0xFF on error.
-# */
-#uint8_t SparkFun_APDS9960::getAmbientLightIntEnable()
-#{
-#    uint8_t val;
-#    
-#    /* Read value from ENABLE register */
-#    if( !wireReadDataByte(APDS9960_ENABLE, val) ) {
-#        return ERROR;
-#    }
-#    
-#    /* Shift and mask out AIEN bit */
-#    val = (val >> 4) & 0b00000001;
-#    
-#    return val;
-#}
-#
-#/**
-# * @brief Turns ambient light interrupts on or off
-# *
-# * @param[in] enable 1 to enable interrupts, 0 to turn them off
-# * @return True if operation successful. False otherwise.
-# */
-#bool SparkFun_APDS9960::setAmbientLightIntEnable(uint8_t enable)
-#{
-#    uint8_t val;
-#    
-#    /* Read value from ENABLE register */
-#    if( !wireReadDataByte(APDS9960_ENABLE, val) ) {
-#        return false;
-#    }
-#    
-#    /* Set bits in register to given value */
-#    enable &= 0b00000001;
-#    enable = enable << 4;
-#    val &= 0b11101111;
-#    val |= enable;
-#    
-#    /* Write register value back into ENABLE register */
-#    if( !wireWriteDataByte(APDS9960_ENABLE, val) ) {
-#        return false;
-#    }
-#    
-#    return true;
-#}
-#
-#/**
-# * @brief Gets if proximity interrupts are enabled or not
-# *
-# * @return 1 if interrupts are enabled, 0 if not. 0xFF on error.
-# */
-#uint8_t SparkFun_APDS9960::getProximityIntEnable()
-#{
-#    uint8_t val;
-#    
-#    /* Read value from ENABLE register */
-#    if( !wireReadDataByte(APDS9960_ENABLE, val) ) {
-#        return ERROR;
-#    }
-#    
-#    /* Shift and mask out PIEN bit */
-#    val = (val >> 5) & 0b00000001;
-#    
-#    return val;
-#}
-#
-#/**
-# * @brief Turns proximity interrupts on or off
-# *
-# * @param[in] enable 1 to enable interrupts, 0 to turn them off
-# * @return True if operation successful. False otherwise.
-# */
-#bool SparkFun_APDS9960::setProximityIntEnable(uint8_t enable)
-#{
-#    uint8_t val;
-#    
-#    /* Read value from ENABLE register */
-#    if( !wireReadDataByte(APDS9960_ENABLE, val) ) {
-#        return false;
-#    }
-#    
-#    /* Set bits in register to given value */
-#    enable &= 0b00000001;
-#    enable = enable << 5;
-#    val &= 0b11011111;
-#    val |= enable;
-#    
-#    /* Write register value back into ENABLE register */
-#    if( !wireWriteDataByte(APDS9960_ENABLE, val) ) {
-#        return false;
-#    }
-#    
-#    return true;
-#}
-#
-#/**
-# * @brief Gets if gesture interrupts are enabled or not
-# *
-# * @return 1 if interrupts are enabled, 0 if not. 0xFF on error.
-# */
-#uint8_t SparkFun_APDS9960::getGestureIntEnable()
-#{
-#    uint8_t val;
-#    
-#    /* Read value from GCONF4 register */
-#    if( !wireReadDataByte(APDS9960_GCONF4, val) ) {
-#        return ERROR;
-#    }
-#    
-#    /* Shift and mask out GIEN bit */
-#    val = (val >> 1) & 0b00000001;
-#    
-#    return val;
-#}
-#
-#/**
-# * @brief Turns gesture-related interrupts on or off
-# *
-# * @param[in] enable 1 to enable interrupts, 0 to turn them off
-# * @return True if operation successful. False otherwise.
-# */
-#bool SparkFun_APDS9960::setGestureIntEnable(uint8_t enable)
-#{
-#    uint8_t val;
-#    
-#    /* Read value from GCONF4 register */
-#    if( !wireReadDataByte(APDS9960_GCONF4, val) ) {
-#        return false;
-#    }
-#    
-#    /* Set bits in register to given value */
-#    enable &= 0b00000001;
-#    enable = enable << 1;
-#    val &= 0b11111101;
-#    val |= enable;
-#    
-#    /* Write register value back into GCONF4 register */
-#    if( !wireWriteDataByte(APDS9960_GCONF4, val) ) {
-#        return false;
-#    }
-#    
-#    return true;
-#}
-#
-#/**
-# * @brief Clears the ambient light interrupt
-# *
-# * @return True if operation completed successfully. False otherwise.
-# */
-#bool SparkFun_APDS9960::clearAmbientLightInt()
-#{
-#    uint8_t throwaway;
-#    if( !wireReadDataByte(APDS9960_AICLEAR, throwaway) ) {
-#        return false;
-#    }
-#    
-#    return true;
-#}
-#
-#/**
-# * @brief Clears the proximity interrupt
-# *
-# * @return True if operation completed successfully. False otherwise.
-# */
-#bool SparkFun_APDS9960::clearProximityInt()
-#{
-#    uint8_t throwaway;
-#    if( !wireReadDataByte(APDS9960_PICLEAR, throwaway) ) {
-#        return false;
-#    }
-#    
-#    return true;
-#}
-#
-#/**
-# * @brief Tells if the gesture state machine is currently running
-# *
-# * @return 1 if gesture state machine is running, 0 if not. 0xFF on error.
-# */
-#uint8_t SparkFun_APDS9960::getGestureMode()
-#{
-#    uint8_t val;
-#    
-#    /* Read value from GCONF4 register */
-#    if( !wireReadDataByte(APDS9960_GCONF4, val) ) {
-#        return ERROR;
-#    }
-#    
-#    /* Mask out GMODE bit */
-#    val &= 0b00000001;
-#    
-#    return val;
-#}
-#
-#/**
-# * @brief Tells the state machine to either enter or exit gesture state machine
-# *
-# * @param[in] mode 1 to enter gesture state machine, 0 to exit.
-# * @return True if operation successful. False otherwise.
-# */
-#bool SparkFun_APDS9960::setGestureMode(uint8_t mode)
-#{
-#    uint8_t val;
-#    
-#    /* Read value from GCONF4 register */
-#    if( !wireReadDataByte(APDS9960_GCONF4, val) ) {
-#        return false;
-#    }
-#    
-#    /* Set bits in register to given value */
-#    mode &= 0b00000001;
-#    val &= 0b11111110;
-#    val |= mode;
-#    
-#    /* Write register value back into GCONF4 register */
-#    if( !wireWriteDataByte(APDS9960_GCONF4, val) ) {
-#        return false;
-#    }
-#    
-#    return true;
-#}
-#
-#/*******************************************************************************
-# * Raw I2C Reads and Writes
-# ******************************************************************************/
-#
-#/**
-# * @brief Writes a single byte to the I2C device (no register)
-# *
-# * @param[in] val the 1-byte value to write to the I2C device
-# * @return True if successful write operation. False otherwise.
-# */
-#bool SparkFun_APDS9960::wireWriteByte(uint8_t val)
-#{
-#    Wire.beginTransmission(APDS9960_I2C_ADDR);
-#    Wire.write(val);
-#    if( Wire.endTransmission() != 0 ) {
-#        return false;
-#    }
-#    
-#    return true;
-#}
-#
-#/**
-# * @brief Writes a single byte to the I2C device and specified register
-# *
-# * @param[in] reg the register in the I2C device to write to
-# * @param[in] val the 1-byte value to write to the I2C device
-# * @return True if successful write operation. False otherwise.
-# */
-#bool SparkFun_APDS9960::wireWriteDataByte(uint8_t reg, uint8_t val)
-#{
-#    Wire.beginTransmission(APDS9960_I2C_ADDR);
-#    Wire.write(reg);
-#    Wire.write(val);
-#    if( Wire.endTransmission() != 0 ) {
-#        return false;
-#    }
-#
-#    return true;
-#}
-#
-#/**
-# * @brief Writes a block (array) of bytes to the I2C device and register
-# *
-# * @param[in] reg the register in the I2C device to write to
-# * @param[in] val pointer to the beginning of the data byte array
-# * @param[in] len the length (in bytes) of the data to write
-# * @return True if successful write operation. False otherwise.
-# */
-#bool SparkFun_APDS9960::wireWriteDataBlock(  uint8_t reg, 
-#                                        uint8_t *val, 
-#                                        unsigned int len)
-#{
-#    unsigned int i;
-#
-#    Wire.beginTransmission(APDS9960_I2C_ADDR);
-#    Wire.write(reg);
-#    for(i = 0; i < len; i++) {
-#        Wire.beginTransmission(val[i]);
-#    }
-#    if( Wire.endTransmission() != 0 ) {
-#        return false;
-#    }
-#
-#    return true;
-#}
-#
-#/**
-# * @brief Reads a single byte from the I2C device and specified register
-# *
-# * @param[in] reg the register to read from
-# * @param[out] the value returned from the register
-# * @return True if successful read operation. False otherwise.
-# */
-#bool SparkFun_APDS9960::wireReadDataByte(uint8_t reg, uint8_t &val)
-#{
-#    
-#    /* Indicate which register we want to read from */
-#    if (!wireWriteByte(reg)) {
-#        return false;
-#    }
-#    
-#    /* Read from register */
-#    Wire.requestFrom(APDS9960_I2C_ADDR, 1);
-#    while (Wire.available()) {
-#        val = Wire.read();
-#    }
-#
-#    return true;
-#}
-#
-#/**
-# * @brief Reads a block (array) of bytes from the I2C device and register
-# *
-# * @param[in] reg the register to read from
-# * @param[out] val pointer to the beginning of the data
-# * @param[in] len number of bytes to read
-# * @return Number of bytes read. -1 on read error.
-# */
-#int SparkFun_APDS9960::wireReadDataBlock(   uint8_t reg, 
-#                                        uint8_t *val, 
-#                                        unsigned int len)
-#{
-#    unsigned char i = 0;
-#    
-#    /* Indicate which register we want to read from */
-#    if (!wireWriteByte(reg)) {
-#        return -1;
-#    }
-#    
-#    /* Read block data */
-#    Wire.requestFrom(APDS9960_I2C_ADDR, len);
-#    while (Wire.available()) {
-#        if (i >= len) {
-#            return -1;
-#        }
-#        val[i] = Wire.read();
-#        i++;
-#    }
-#
-#    return i;
 #}

@@ -94,7 +94,7 @@ OFF = 0
 ON = 1
 
 OK = 0
-ERROR =1 
+ERROR =0xff 
 
 
 # Acceptable parameters for setMode
