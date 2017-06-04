@@ -28,11 +28,6 @@ import time
 
 
 
-def info():
-    print APDS9960_I2C_ADDR
-    print Directions.DIR_NEAR
-    print Directions.DIR_ALL
-
 
 class APDS9960:
     def __init__(self, bus=123, devaddr=APDS9960_I2C_ADDR):
@@ -508,43 +503,6 @@ class APDS9960:
 
     def setGestureMode(self, val):
         self.setVal(APDS9960_GCONF4,0x1,0,val)
-
-
-
-info()
-
-sensor = APDS9960(bus=1)
-sensor.initDevice()
-print "Done"
-sensor.enableLightSensor(0)
-time.sleep(0.5) # delay 500ms for autocalibration
-light=sensor.readAmbientLight()
-print "light={}".format(light)
-red=sensor.readRedLight()
-green=sensor.readGreenLight()
-blue=sensor.readBlueLight()
-print "Light Colors({},{},{})".format(red,green,blue)
-#sensor.disableLightSensor()
-
-#enable proximity sensor with no interrupts
-sensor.setProximityGain(PGAIN_2X)
-sensor.enableProximitySensor(0)
-time.sleep(0.5)
-i=100
-while i >0:
-    i-=1
-    print i
-    light=sensor.readAmbientLight()
-    print "light={}".format(light)
-    red=sensor.readRedLight()
-    green=sensor.readGreenLight()
-    blue=sensor.readBlueLight()
-    print "Light Colors({},{},{})".format(red,green,blue)
-    prox=sensor.readProximity()
-    print "Proximity = {}".format(prox)
-    time.sleep(1.5)
-print "Done"
-
 
 #
 #/**
