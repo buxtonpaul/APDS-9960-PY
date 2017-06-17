@@ -36,6 +36,12 @@ sensor = GestureSensor.APDS9960(bus=1)
 
 sensor.initDevice()
 sensor.resetGestureParameters()
+
+
+# These values work better for me than the defaults, perhaps because I am not using the Adafruit one...
+sensor.setGestureGain(GGAIN_2X)
+sensor.setGestureLEDDrive(LED_DRIVE_25MA)
+  
 sensor.enableGestureSensor(True)
 
 #sensor.clearGestureInt()

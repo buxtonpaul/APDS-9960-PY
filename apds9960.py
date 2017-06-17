@@ -218,10 +218,11 @@ class APDS9960:
                     # /* Filter and process gesture data. Decode near/far state */
                     if self.processGestureData(fifo_data):
                         if self.decodeGesture():
-                            print "not sure how we get here"
+                            pass
+                            #print "not sure how we get here"
                     
                     #/* Reset data */
-                        del fifo_data[:]
+                    del fifo_data[:]
                 else:
                     pass #return Directions.DIR_NONE
             else:
@@ -305,6 +306,7 @@ class APDS9960:
         
         #/* Determine Near/Far gesture */
         if self._gesture_ud_count_ == 0 and self._gesture_lr_count_ == 0 :
+            
             if abs(ud_delta) < GESTURE_SENSITIVITY_2 and abs(lr_delta) < GESTURE_SENSITIVITY_2:            
                 if (ud_delta == 0) and (lr_delta == 0):
                     self._gesture_near_count_+=1
@@ -312,10 +314,14 @@ class APDS9960:
                     self._gesture_far_count_+=1             
                 
                 if (self._gesture_near_count_ >= 10) and (self._gesture_far_count_ >= 2):
+                    #print "ud delta {},lr delta {}".format(ud_delta,lr_delta)            
+                    #print "Near count{}, far count={}".format(self._gesture_near_count_,self._gesture_far_count_)
                     if (ud_delta == 0) and (lr_delta == 0):
-                        self.gesture_state_ = States.NEAR_STATE
+                        self._gesture_state_ = States.NEAR_STATE
+                        #print "Near State"
                     elif (ud_delta != 0) and (lr_delta != 0):
-                        self.gesture_state_ = States.FAR_STATE
+                        self._gesture_state_ = States.FAR_STATE
+                        #print "Far State"
                     
                     return True
         else:
@@ -335,12 +341,15 @@ class APDS9960:
     #* @return True if near/far event. False otherwise.
     #*/
     def decodeGesture(self):
+        #print "Decode Gesture"
         #/* Return if near or far event is detected */
         if  self._gesture_state_ == States.NEAR_STATE:
             self._gesture_motion_ = Directions.DIR_NEAR
+            #print "Near"
             return True
         elif self._gesture_state_ == States.FAR_STATE:
             self._gesture_motion_ = Directions.DIR_FAR
+            #print "Far"
             return True
         
         #print "UP/DOWN {} LEFT/RIGHT {}".format(self._gesture_ud_count_,self._gesture_lr_count_)
