@@ -48,18 +48,18 @@ class APDS9960:
 
     def initDevice(self):
         if self._bus == 123:
-            print "Pretending to do something here"
+            print("Pretending to do something here")
             return OK
 
         from smbus import SMBus
         self._device = SMBus(self._bus) # 0 indicates /dev/i2c-0
         self._devid = self._device.read_byte_data(self._devaddr, APDS9960_ID)
         if  self._devid not in (APDS9960_ID_1, APDS9960_ID_2):
-            print "Unknown device ID {}".format(self._devid)
+            print("Unknown device ID {}".format(self._devid))
             raise
-        print "Device found ok"
+        print("Device found ok")
         if self.setMode(ALL, OFF) != OK:
-            print "Failed to set all oiff"
+            print("Failed to set all oiff")
             return ERROR
 
         self._device.write_byte_data(self._devaddr, APDS9960_ATIME, DEFAULT_ATIME)
@@ -100,7 +100,7 @@ class APDS9960:
     # sets/clears bits in the mode register for the mode requested.
         val = self.getMode()
         if val == 0xff:
-            print "unable to set mode bits as mode reg = 0xff"
+            print("unable to set mode bits as mode reg = 0xff")
             return
         enable = enable & 1
         if mode >= 0 and mode <= 6:
@@ -698,4 +698,3 @@ class APDS9960:
 
     def setGestureMode(self, val):
         self.setVal(APDS9960_GCONF4,0x1,0,val)
-
