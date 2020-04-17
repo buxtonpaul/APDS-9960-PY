@@ -60,7 +60,7 @@ try:
         #print "Light Colors({},{},{})".format(red,green,blue)
 
 except KeyboardInterrupt:
-    GPIO.cleanup()
+    GPIO.cleanup() # clean up GPIO on CTRL+C exit
 
 sensor.resetGestureParameters()
 print("Done")
