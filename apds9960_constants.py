@@ -20,7 +20,6 @@ GESTURE_THRESHOLD_OUT = 10
 GESTURE_SENSITIVITY_1 = 50
 GESTURE_SENSITIVITY_2 = 20
 
-
 # Acceptable device IDs
 APDS9960_ID_1 = 0xAB
 APDS9960_ID_2 = 0x9C
@@ -95,7 +94,6 @@ ON = 1
 
 OK = 0
 ERROR =0xff 
-
 
 # Acceptable parameters for setMode
 POWER = 0
@@ -176,17 +174,13 @@ DEFAULT_GPULSE = 0xC9    # 32us, 10 pulses
 DEFAULT_GCONF3 = 0       # All photodiodes active during gesture
 DEFAULT_GIEN = 0       # Disable gesture interrupts
 
-
 # Direction definitions
 class Directions:
     DIR_NONE, DIR_LEFT, DIR_RIGHT, DIR_UP, DIR_DOWN, DIR_NEAR, DIR_FAR, DIR_ALL = range(8)
 
-
-
 # State definitions
 class States:
     NA_STATE, NEAR_STATE, FAR_STATE, ALL_STATEGWTIME_0MS = range(4)
-
 
 # Container for gesture data
 #typedef struct gesture_data_type {
@@ -325,4 +319,3 @@ class States:
 #    int gesture_state_;
 #    int gesture_motion_;
 #};
-
